@@ -3,31 +3,23 @@ from discord.ext import commands
 from discord import app_commands
 
 class PollView(discord.ui.View):
-    def __init__(self, question, options):
-        super().__init__(timeout=None) # Make it persistent
-        self.question = question
-        self.options = options
-        self.votes = {option: [] for option in options} # { "Option Name": [user_id1, user_id2] }
+    def __init__(self, options):
+        super().__init__(timeout=None)
+        for index, option in enumerate(options):
+            # We add the index to the custom_id to make it unique
+            button = discord.ui.Button(
+                label=option, 
+                style=discord.ButtonStyle.primary,
+                custom_id=f"poll_option_{index}" # This is the fix!
+            )
+            button.callback = self.create_callback(option)
+            self.add_item(button)
 
-        # Dynamically create buttons for each option
-        for option in self.options:
-            self.add_item(PollButton(label=option))
-
-    def create_embed(self):
-        embed = discord.Embed(title=f"📊 Poll: {self.question}", color=discord.Color.blue())
-        total_votes = sum(len(v) for v in self.votes.values())
-        
-        description = ""
-        for option, voters in self.votes.items():
-            count = len(voters)
-            # Calculate percentage bar
-            percent = (count / total_votes * 100) if total_votes > 0 else 0
-            bar = "🟦" * int(percent / 10) + "⬜" * (10 - int(percent / 10))
-            description += f"**{option}**\n{bar} {count} votes ({int(percent)}%)\n\n"
-        
-        embed.description = description
-        embed.set_footer(text=f"Total Votes: {total_votes}")
-        return embed
+    def create_callback(self, option):
+        async def callback(interaction: discord.Interaction):
+            # Your voting logic here
+            await interaction.response.send_message(f"You voted for {option}!", ephemeral=True)
+        return callback
 
 class PollButton(discord.ui.Button):
     def __init__(self, label):
