@@ -145,5 +145,41 @@ class Tickets(commands.Cog):
         await interaction.response.send_message("Ticket panel deployed!", ephemeral=True)
         await interaction.channel.send(embed=embed, view=PersistentTicketView())
 
+    @app_commands.command(name="add_member", description="Add a specific member to this ticket channel.")
+    @app_commands.describe(member="The member you want to add to this ticket")
+    async def add_member(self, interaction: discord.Interaction, member: discord.Member):
+        # 1. Security Check: Only allow this in ticket channels
+        if not interaction.channel.name.startswith(("ticket-", "claimed-")):
+            return await interaction.response.send_message("❌ This command can only be used inside a ticket channel!", ephemeral=True)
+
+        # 2. Permission Check: Only staff or admins should be able to add people
+        conn = sqlite3.connect('server_settings.db')
+        cursor = conn.cursor()
+        cursor.execute('SELECT support_role_id FROM ticket_config WHERE guild_id = ?', (interaction.guild.id,))
+        res = cursor.fetchone()
+        conn.close()
+
+        support_role_id = res[0] if res else None
+        is_staff = any(role.id == support_role_id for role in interaction.user.roles) if support_role_id else False
+        
+        if not is_staff and not interaction.user.guild_permissions.administrator:
+            return await interaction.response.send_message("❌ Only support staff can add members to tickets!", ephemeral=True)
+
+        # 3. Update Permissions
+        await interaction.channel.set_permissions(member, 
+            read_messages=True, 
+            send_messages=True, 
+            attach_files=True, 
+            embed_links=True,
+            view_channel=True
+        )
+        
+        # 4. Success Message
+        embed = discord.Embed(
+            description=f"✅ {member.mention} has been added to the ticket by {interaction.user.mention}.",
+            color=discord.Color.green()
+        )
+        await interaction.response.send_message(embed=embed)
+
 async def setup(bot):
     await bot.add_cog(Tickets(bot))
