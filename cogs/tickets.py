@@ -98,5 +98,58 @@ class Tickets(commands.Cog):
         await interaction.channel.set_permissions(member, read_messages=True, send_messages=True)
         await interaction.response.send_message(f"✅ {member.mention} added.")
 
+# ... inside your cogs/tickets.py ...
+
+class CreateTicketButton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(label="Open Ticket", style=discord.ButtonStyle.primary, emoji="🎫", custom_id="open_ticket_btn")
+
+    async def callback(self, interaction: discord.Interaction):
+        guild = interaction.guild
+        user = interaction.user
+
+        # 1. Fetch support role from database
+        conn = sqlite3.connect('server_settings.db')
+        cursor = conn.cursor()
+        cursor.execute('SELECT support_role_id FROM ticket_config WHERE guild_id = ?', (guild.id,))
+        result = cursor.fetchone()
+        conn.close()
+
+        support_role_id = result[0] if result else None
+        support_role = guild.get_role(support_role_id) if support_role_id else None
+
+        # 2. Permission setup (Same as before)
+        overwrites = {
+            guild.default_role: discord.PermissionOverwrite(read_messages=False),
+            user: discord.PermissionOverwrite(read_messages=True, send_messages=True),
+            guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
+        }
+        if support_role:
+            overwrites[support_role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
+
+        # 3. Create the channel
+        channel = await guild.create_text_channel(
+            name=f"ticket-{user.display_name}",
+            overwrites=overwrites,
+            category=None # You can add category logic here if you wish
+        )
+
+        # 4. Prepare the ping content
+        # We mention both the user and the support role (if it exists)
+        ping_content = f"{user.mention}"
+        if support_role:
+            ping_content += f" {support_role.mention}"
+
+        embed = discord.Embed(
+            title="Ticket Created",
+            description=f"Hello {user.mention}, welcome to your ticket! Please describe your issue and our support team will be with you shortly.",
+            color=discord.Color.green()
+        )
+        
+        # Send the ping and the embed together
+        await channel.send(content=ping_content, embed=embed, view=TicketControls())
+
+        await interaction.response.send_message(f"✅ Ticket created at {channel.mention}!", ephemeral=True)
+
 async def setup(bot):
     await bot.add_cog(Tickets(bot))
