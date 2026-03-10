@@ -43,13 +43,13 @@ class ServerConfig(commands.Cog):
         self.conn.commit()
         await interaction.response.send_message(f"✅ Log channel set to {channel.mention}.", ephemeral=True)
 
-    @app_commands.command(name="set_support_role", description="Set the role that can view and claim tickets.")
-    @app_commands.default_permissions(administrator=True)
-    async def set_support_role(self, interaction: discord.Interaction, role: discord.Role):
-        self.ensure_guild(interaction.guild.id)
-        self.cursor.execute('UPDATE settings SET support_role_id = ? WHERE guild_id = ?', (role.id, interaction.guild.id))
-        self.conn.commit()
-        await interaction.response.send_message(f"✅ Support role set to {role.mention}.", ephemeral=True)
+    # @app_commands.command(name="set_support_role", description="Set the role that can view and claim tickets.")
+    # @app_commands.default_permissions(administrator=True)
+    # async def set_support_role(self, interaction: discord.Interaction, role: discord.Role):
+    #     self.ensure_guild(interaction.guild.id)
+    #     self.cursor.execute('UPDATE settings SET support_role_id = ? WHERE guild_id = ?', (role.id, interaction.guild.id))
+    #     self.conn.commit()
+    #     await interaction.response.send_message(f"✅ Support role set to {role.mention}.", ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(ServerConfig(bot))

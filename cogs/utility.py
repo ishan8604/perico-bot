@@ -30,6 +30,7 @@ class HelpDropdown(discord.ui.Select):
             embed.add_field(name="/set_leave", value="Set the goodbye channel and custom message.", inline=False)
             embed.add_field(name="/set_logging", value="Set the channel for message & command logs.", inline=False)
             embed.add_field(name="/set_suggestions", value="Setup the suggestion channel and ping role.", inline=False)
+            embed.add_field(name="/set_voice_logs", value="Set the channel where voice join/leave logs are sent.", inline=False)
             embed.add_field(name="/add_banned_word", value="Add words to the Auto-Mod filter.", inline=False)
             embed.add_field(name="/toggle_invites", value="Enable/Disable anti-invite link protection.", inline=False)
 
