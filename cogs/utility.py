@@ -99,5 +99,21 @@ class Utility(commands.Cog):
         embed.add_field(name="Boosts", value=f"Level {guild.premium_tier}", inline=True)
         await interaction.response.send_message(embed=embed)
 
+    @app_commands.command(name="status", description="Check the bot's health and global stats.")
+    @app_commands.default_permissions(administrator=True)
+    async def status(self, interaction: discord.Interaction):
+        guild_count = len(self.bot.guilds)
+        total_members = sum(guild.member_count for guild in self.bot.guilds)
+        latency = round(self.bot.latency * 1000)
+        
+        embed = discord.Embed(title="🚀 Global System Status", color=discord.Color.green())
+        embed.add_field(name="Servers", value=f"📡 {guild_count}", inline=True)
+        embed.add_field(name="Total Users", value=f"👥 {total_members}", inline=True)
+        embed.add_field(name="Latency", value=f"⚡ {latency}ms", inline=True)
+        embed.add_field(name="Host", value="☁️ GCP e2-micro (Linux)", inline=False)
+        
+        embed.set_footer(text="Bot is running at 100% capacity")
+        await interaction.response.send_message(embed=embed)
+
 async def setup(bot):
     await bot.add_cog(Utility(bot))
